@@ -1,31 +1,75 @@
-import useFetch from "@/hooks/useFetch";
+/* eslint-disable @next/next/no-img-element */
+import Tts from "@/components/Tts";
+import { useEffect, useState } from "react";
 
-const url = `https://play.ht/api/transcribe`;
-
-export interface TtsData {
-  file: string;
-  created_at: number;
-  hash: string;
-  isCharged: boolean;
+export interface TextOverlay {
+  lines: any[];
+  hasOverlay: boolean;
+  message: string;
 }
 
+export interface ParsedResult {
+  TextOverlay: TextOverlay;
+  TextOrientation: string;
+  FileParseExitCode: number;
+  ParsedText: string;
+  ErrorMessage: string;
+  ErrorDetails: string;
+}
+
+export interface TtsRes {
+  ParsedResults: ParsedResult[];
+  OCRExitCode: number;
+  IsErroredOnProcessing: boolean;
+  ProcessingTimeInMilliseconds: string;
+  SearchablePDFURL: string;
+}
 export default function Home() {
-  const body = {
-    userId: "public-access",
-    platform: "landing_demo",
-    ssml: "<speak><p>继中国脱口秀演员李昊石之后，马来西亚脱口秀演员黄瑾瑜（艺名：罗杰叔叔，UncleRoger）在包括微博和视频网站Bilibili在内的中国网络平台遭到封禁。微博对于封禁“罗杰叔叔”的账号的解释是“违反相关法律法规“，这让一些网友感到困惑。        但也有网友指出，黄瑾瑜几天前曾在社交媒体上发布过一段表演视频。视频中，黄瑾瑜调侃了中国政府的监控手段和对台湾是其领土的宣称。      视频显示，在得知一位观众来自中国广州后，舞台上的黄瑾瑜忙不迭地表示“中国，好国家，好国家”，还做出一个撇嘴瞪眼的嘲讽表情。        “我们现在都要这样国家广播公司BBC发布的蛋炒饭教程而在网上爆红。</p></speak>",
-    voice: "zh-TW-HsiaoChenNeural",
-    narrationStyle: "regular",
+  const [inputText, setInputText] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [ttsData, setTtsData] = useState<TtsRes | undefined>(undefined);
+
+  useEffect(() => {
+    getTextFromImg();
+  }, []);
+
+  const getTextFromImg = async () => {
+    const res = await fetch(
+      "https://api.ocr.space/parse/imageurl?apikey=K89841884088957&url=https://p8.itc.cn/q_70/images01/20210926/371b86ebc7834999a2e68e77b6d6d1ec.jpeg&filetype=jpg&OCREngine=1&language=chs"
+    );
+    const data: TtsRes = await res.json();
+    setTtsData(data);
+    console.log(data);
+    // console.log(ttsData?.parsedResults[0]?.parsedText);
   };
-  const { data, error } = useFetch<TtsData>(url, {
-    method: "POST", // *GET, POST, PUT, DELETE, etc.
-    headers: {
-      "Content-Type": "application/json",
-      // 'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: JSON.stringify(body), // body data type must match "Content-Type" header
-  });
-  if (error) return <p>There is an error.</p>;
-  if (!data) return <p>Loading...</p>;
-  return <audio src={data.file} controls></audio>;
+
+  return (
+    <>
+      <img
+        src="https://p8.itc.cn/q_70/images01/20210926/371b86ebc7834999a2e68e77b6d6d1ec.jpeg"
+        alt="image"
+      />
+      <div>Read text from picture</div>
+      {ttsData ? ttsData.ParsedResults[0].ParsedText : null}
+      {/* <div></div>
+      <label>
+        Text input:
+        <input
+          className="text-black"
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+        />
+      </label> */}
+      <br />
+      <button
+        className="p-2 text-black bg-white rounded-sm"
+        onClick={(e) => setSubmitted(!submitted)}
+      >
+        Read the text
+      </button>
+      {submitted ? (
+        <Tts text={JSON.stringify(ttsData.ParsedResults[0].ParsedText)} />
+      ) : null}
+    </>
+  );
 }
