@@ -67,9 +67,11 @@ export default function Home() {
       >
         Read the text
       </button>
-      {submitted ? (
-        <Tts text={JSON.stringify(ttsData.ParsedResults[0].ParsedText)} />
-      ) : null}
+      {submitted
+        ? ttsData && (
+            <Tts text={JSON.stringify(ttsData.ParsedResults[0].ParsedText)} />
+          )
+        : null}
     </>
   );
 }
