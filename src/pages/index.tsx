@@ -69,7 +69,14 @@ export default function Home() {
       </button>
       {submitted
         ? ttsData && (
-            <Tts text={JSON.stringify(ttsData.ParsedResults[0].ParsedText)} />
+            <Tts
+              text={JSON.stringify(
+                ttsData.ParsedResults[0].ParsedText.replace(
+                  /(\r\n|\n|\r)/gm,
+                  ""
+                )
+              )}
+            />
           )
         : null}
     </>
